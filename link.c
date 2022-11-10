@@ -624,7 +624,19 @@ static void initpdims1 (void)
             pdf_obj *pageobj = NULL;
 
             fz_var (pageobj);
-            pageobj = pdf_lookup_page_obj (ctx, pdf, pageno);
+            if (pdf->rev_page_map) {
+                for (int i = 0; i < pdf->map_page_count; ++i) {
+                    if (pdf->rev_page_map[i].page == pageno) {
+                        pageobj = pdf_get_xref_entry (
+                            ctx, pdf, pdf->rev_page_map[i].object
+                            )->obj;
+                        break;
+                    }
+                }
+            }
+            if (!pageobj) {
+                pageobj = pdf_lookup_page_obj (ctx, pdf, pageno);
+            }
 
             rotate = pdf_to_int (ctx, pdf_dict_gets (ctx, pageobj, "Rotate"));
 
