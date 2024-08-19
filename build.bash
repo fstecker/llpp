@@ -39,7 +39,8 @@ test -d $mudir || die muPDF wasn\'t found in $outd/, consult $srcd/BUILDING
 
 mkdir -p $outd/{$wsid,lablGL}
 
-isfresh() { test "$(<$1.past)" = "$2"; } 2>/dev/null
+# thanks to Sebastian Rasmussen
+isfresh() { test "$(cat $1.past)" = "$2"; } 2>/dev/null
 
 mbt=${mbt:-release}
 test -n "${gmk:-}" && gmk=false || gmk=true
@@ -71,10 +72,15 @@ oincs() {
 }
 
 oflags() {
+    local f=""
     case "${1#$outd/}" in
         lablGL/*) f="-g";;
-        utf8syms.cmo|confstruct.cmo|config.cmo|ffi.cmo|wsi/cocoa/wsi.cmo)
+        utf8syms.cmo|confstruct.cmo)
             f="-g -strict-sequence -strict-formats -alert @all-missing-mli";;
+        wsi/x11/wsi.cm[io]) f="-g -I +unix";;
+        utils.cmi) f="-g -I +unix -I +str";;
+        config.cmo|ffi.cmo|main.cmo|utils.cmo|parser.cmo|uiutils.cmo|help.cmo)
+            f="-g -I +unix -I +str -strict-sequence -strict-formats -alert @all-missing-mli";;
         *) f="-g -strict-sequence -strict-formats -alert @all -warn-error @A";;
     esac
     echo $(oincs $outd $1) $f
@@ -104,8 +110,8 @@ mflags() {
 }
 
 overs=$(ocamlc -vnum 2>/dev/null) || overs=""
-if test "$overs" != "4.14.0~rc1"; then
-    url=https://caml.inria.fr/pub/distrib/ocaml-4.14/ocaml-4.14.0~rc1.tar.xz
+if test "$overs" != "5.2.0"; then
+    url="https://caml.inria.fr/pub/distrib/ocaml-5.2/ocaml-5.2.0.tar.xz"
     txz=$outd/$(basename $url)
     keycmd="printf $url; digest $txz;"
     isfresh $txz "$(eval $keycmd)" || {
@@ -321,6 +327,7 @@ else
 fi
 
 cmd="ocamlc -custom $libs -o $outd/llpp $cobjs $modules -cclib \"$clibs\""
+cmd="$cmd -I +unix -I +str"
 keycmd="digest $outd/llpp $cobjs $modules $mulibs"
 isfresh "$outd/llpp" "$cmd$(eval $keycmd)" || {
     echo linking $outd/llpp

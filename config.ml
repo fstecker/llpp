@@ -14,11 +14,14 @@ let multicolumns_of_string s =
   try
     (int_of_string s, 0, 0)
   with _ ->
-    Scanf.sscanf s "%u,%u,%u" (fun n a b ->
-        if a > 1 || b > 1
-        then error "subtly broken";
-        (n, a, b)
-      )
+    try
+      Scanf.sscanf s "%u,%u,%u" (fun n a b ->
+          if a > 1 || b > 1
+          then error "subtly broken";
+          (n, a, b)
+        )
+    with End_of_file ->
+      (1, 0, 0)
 
 include Confstruct
 
@@ -365,6 +368,7 @@ module S = struct
   let tilelru : (tilemapkey * opaque * pixmapsize) Queue.t = Queue.create ()
   let fontpath = ref E.s
   let redirstderr = ref false
+  let loading = ref true
 end
 
 let conf = { defconf with keyhashes = copykeyhashes defconf }

@@ -26,13 +26,14 @@
 #pragma GCC diagnostic ignored "-Wdocumentation"
 #pragma GCC diagnostic ignored "-Wdouble-promotion"
 #pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
+#pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
+#pragma GCC diagnostic ignored "-Wunsafe-buffer-usage"
 #else
 #pragma GCC diagnostic error "-Wcast-qual"
 #endif
 
 #include GL_H
 
-#define CAML_NAME_SPACE
 #include <caml/fail.h>
 #include <caml/alloc.h>
 #include <caml/memory.h>
@@ -40,6 +41,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic ignored "-Wundef"
 #include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 #pragma GCC diagnostic pop
@@ -357,7 +359,7 @@ static int openxref (char *filename, char *mimetype, char *password,
 
 static void docinfo (void)
 {
-    struct { char *tag; char *name; } tab[] = {
+    const struct { const char *tag; const char *name; } tab[] = {
         { FZ_META_INFO_TITLE, "Title" },
         { FZ_META_INFO_AUTHOR, "Author" },
         { FZ_META_FORMAT, "Format" },
@@ -366,6 +368,8 @@ static void docinfo (void)
         { FZ_META_INFO_PRODUCER, "Producer" },
         { FZ_META_INFO_CREATIONDATE, "Creation date" },
         { FZ_META_INFO_MODIFICATIONDATE, "Modification date"},
+        { FZ_META_INFO_SUBJECT, "Subject" },
+        { FZ_META_INFO_KEYWORDS, "Keywords" },
     };
     int len = 0, need;
     char *buf = NULL;
@@ -593,7 +597,12 @@ static void initpdims1 (void)
         pdf_obj *obj = pdf_dict_getp (ctx, pdf_trailer (ctx, pdf),
                                       "Root/Pages/MediaBox");
         rootmediabox = pdf_to_rect (ctx, obj);
-        pdf_load_page_tree (ctx, pdf);
+        fz_try (ctx) {
+            pdf_load_page_tree (ctx, pdf);
+        }
+        fz_catch (ctx) {
+            printd ("emsg pdf_load_page_tree: %s", fz_caught_message (ctx));
+        }
     }
 
     for (pageno = 0; pageno < cxcount; ++pageno) {
@@ -605,19 +614,7 @@ static void initpdims1 (void)
             pdf_obj *pageobj = NULL;
 
             fz_var (pageobj);
-            if (pdf->rev_page_map) {
-                for (int i = 0; i < pdf->rev_page_count; ++i) {
-                    if (pdf->rev_page_map[i].page == pageno) {
-                        pageobj = pdf_get_xref_entry (
-                            ctx, pdf, pdf->rev_page_map[i].object
-                            )->obj;
-                        break;
-                    }
-                }
-            }
-            if (!pageobj) {
-                pageobj = pdf_lookup_page_obj (ctx, pdf, pageno);
-            }
+            pageobj = pdf_lookup_page_obj (ctx, pdf, pageno);
 
             rotate = pdf_to_int (ctx, pdf_dict_gets (ctx, pageobj, "Rotate"));
 
@@ -952,20 +949,17 @@ static struct pagedim *pdimofpageno (int pageno)
 
 static void recurse_outline (fz_outline *outline, int level)
 {
+    /* Significantly simplified by Sebastian Rasmussen */
     while (outline) {
-        int pageno;
-        fz_point p;
         fz_location loc;
+        int pageno;
+        fz_point p = { .x = outline->x, .y = outline->y };
 
-        loc = fz_resolve_link (state.ctx, state.doc, String_val (outline->uri),
+        loc = fz_resolve_link (state.ctx, state.doc, outline->uri,
                                &p.x, &p.y);
         pageno = fz_page_number_from_location (state.ctx, state.doc, loc);
         if (pageno >= 0) {
-            struct pagedim *pdim =
-                pdimofpageno (
-                    fz_page_number_from_location (state.ctx, state.doc,
-                                                  outline->page)
-                    );
+            struct pagedim *pdim = pdimofpageno (pageno);
             int h = fz_maxi (fz_absi (pdim->bounds.y1 - pdim->bounds.y0), 0);
             p = fz_transform_point (p, pdim->ctm);
             printd ("o %d %d %d %d %s",
@@ -1497,10 +1491,8 @@ static void *mainloop (void UNUSED_ATTR *unused)
             break;
         }
         case Creqlayout: {
-            char *nameddest;
             int rotate, off, h;
             int fitmodel;
-            pdf_document *pdf;
 
             printd ("clear");
             ret = sscanf (p, "%d %d %d %n", &rotate, &fitmodel, &h, &off);
@@ -1508,7 +1500,6 @@ static void *mainloop (void UNUSED_ATTR *unused)
                 errx (1, "bad reqlayout line `%.*s' ret=%d", len, p, ret);
             }
             lock ("reqlayout");
-            pdf = pdf_specifics (state.ctx, state.doc);
             if (state.rotate != rotate || state.fitmodel != fitmodel) {
                 state.gen += 1;
             }
@@ -1518,8 +1509,12 @@ static void *mainloop (void UNUSED_ATTR *unused)
             layout ();
             process_outline ();
 
-            nameddest = p + off;
-            if (pdf && nameddest && *nameddest) {
+#ifdef TODO_LINK_URI
+            char *nameddest = p + off;
+            if (nameddest && *nameddest) {
+                fz_link_dest ld;
+                const char *uri = "#%s" % nameddest;
+                sd = fz_resolve_link_dest (state.ctx, doc, uri);
                 fz_point xy;
                 struct pagedim *pdim;
                 int pageno = pdf_lookup_anchor (state.ctx, pdf, nameddest,
@@ -1528,6 +1523,7 @@ static void *mainloop (void UNUSED_ATTR *unused)
                 xy = fz_transform_point (xy, pdim->ctm);
                 printd ("a %d %d %d", pageno, (int) xy.x, (int) xy.y);
             }
+#endif
 
             state.gen++;
             unlock ("reqlayout");
@@ -2558,7 +2554,9 @@ ML (getfileannot (value ptr_v, value n_v))
     pdf_obj *fs = pdf_dict_get (state.ctx,
                                 pdf_annot_obj (state.ctx, slink->u.annot),
                                 PDF_NAME (FS));
-    ret_v = caml_copy_string (pdf_embedded_file_name (state.ctx, fs));
+    pdf_embedded_file_params params;
+    pdf_get_embedded_file_params (state.ctx, fs, &params);
+    ret_v = caml_copy_string (params.filename);
 
     unlock (__func__);
     CAMLreturn (ret_v);
@@ -2572,11 +2570,12 @@ ML0 (savefileannot (value ptr_v, value n_v, value path_v))
 
     lock (__func__);
     struct slink *slink = &page->slinks[Int_val (n_v)];
+
     fz_try (state.ctx) {
         pdf_obj *fs = pdf_dict_get (state.ctx,
                                     pdf_annot_obj (state.ctx, slink->u.annot),
                                     PDF_NAME (FS));
-        fz_buffer *buf = pdf_load_embedded_file (state.ctx, fs);
+        fz_buffer *buf = pdf_load_embedded_file_contents (state.ctx, fs);
         fz_save_buffer (state.ctx, buf, path);
         fz_drop_buffer (state.ctx, buf);
         printd ("progress 1 saved '%s'", path);
@@ -2585,6 +2584,7 @@ ML0 (savefileannot (value ptr_v, value n_v, value path_v))
         printd ("emsg saving '%s': %s", path, fz_caught_message (state.ctx));
     }
     unlock (__func__);
+    CAMLreturn0;
 }
 
 ML (getlinkrect (value ptr_v, value n_v))
