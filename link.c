@@ -476,7 +476,7 @@ static void *loadpage (int pageno, int pindex)
     fz_device *dev;
     struct page *page;
 
-    page = calloc (sizeof (struct page), 1);
+    page = calloc (1, sizeof (struct page));
     if (!page) {
         err (1, errno, "calloc page %d", pageno);
     }
