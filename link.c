@@ -28,7 +28,6 @@
 #pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
 #pragma GCC diagnostic ignored "-Wunsafe-buffer-usage"
-#pragma GCC diagnostic ignored "-Wswitch-default"
 #else
 #pragma GCC diagnostic error "-Wcast-qual"
 #endif
@@ -909,6 +908,7 @@ static void layout (void)
             p->left = 0;
             zoom = state.w / w;
             break;
+        default: abort ();
         }
 
         p->zoomctm = fz_scale (zoom, zoom);
@@ -1111,7 +1111,7 @@ static void search (regex_t *re, int pageno, int y, int forward)
     fz_stext_block *block;
     fz_stext_page *text = NULL;
     int niters = 0, num_matches = 0;
-    enum a_searchresult the_searchresult = NotFound;
+    int searchresult = NotFound;
 
     start = now ();
     while (pageno >= 0 && pageno < state.pagecount && num_matches == 0) {
@@ -1120,7 +1120,7 @@ static void search (regex_t *re, int pageno, int y, int forward)
             if (hasdata (state.csock)) {
                 fz_drop_stext_page (state.ctx, text);
                 fz_drop_page (state.ctx, page);
-                the_searchresult = Interrupted;
+                searchresult = Interrupted;
                 break;
             }
             else {
@@ -1151,9 +1151,8 @@ static void search (regex_t *re, int pageno, int y, int forward)
                         continue;
                     }
 
-                    the_searchresult =
-                        matchline (re, line, num_matches, pageno);
-                    num_matches += the_searchresult == Found;
+                    searchresult = matchline (re, line, num_matches, pageno);
+                    num_matches += searchresult == Found;
                 }
             }
         }
@@ -1170,9 +1169,8 @@ static void search (regex_t *re, int pageno, int y, int forward)
                         continue;
                     }
 
-                    the_searchresult =
-                        matchline (re, line, num_matches, pageno);
-                    num_matches += the_searchresult == Found;
+                    searchresult = matchline (re, line, num_matches, pageno);
+                    num_matches += searchresult == Found;
                 }
             }
         }
@@ -1191,10 +1189,11 @@ static void search (regex_t *re, int pageno, int y, int forward)
         page = NULL;
     }
     dur = now () - start;
-    switch (the_searchresult) {
+    switch (searchresult) {
     case Found: case NotFound: cap = ""; break;
     case Error: cap = "error "; break;
     case Interrupted: cap = "interrupt "; break;
+    default: abort ();
     }
     if (num_matches) {
         printd ("progress 1 %sfound %d in %f sec", cap, num_matches, dur);
@@ -2430,6 +2429,8 @@ ML (findlink (value ptr_v, value dir_v))
                 }
             }
             break;
+
+        default: abort ();
         }
     }
     else {
@@ -2444,6 +2445,9 @@ ML (findlink (value ptr_v, value dir_v))
                 found = page->slinks + (page->slinkcount - 1);
             }
             break;
+
+        default:
+            abort ();
         }
     }
     if (found) {
