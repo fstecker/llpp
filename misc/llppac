@@ -145,8 +145,10 @@ case $type in
         fi
         ;;
     image)
-        missing convert "convert(http://www.imagemagick.org/script/convert.php)"
-        conv='convert - pdf:"$casp"'
+        missing ffmpeg "ffmpeg(https://www.ffmpeg.org"
+        unset dc
+        caspsuf=".jpg"
+        conv='ffmpeg -loglevel fatal -i - "$casp"'
     ;;
     dvi)
         test -n "$dc" && die "cannot convert compressed '$mime'"
@@ -168,4 +170,4 @@ casp=$cachedir/${hash%% *}$caspsuf
 { test -n "${force-}" || test ! -e "$casp"; } && eval "$filt" "$conv"
 shift
 
-exec llpp -origin $origin "$@" "$casp"
+exec llpp -origin "$origin" "$@" "$casp"

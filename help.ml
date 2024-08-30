@@ -1,6 +1,6 @@
 let keys =
 {|-----Quitting-----
-escape/q  - quit
+q         - quit
 Q         - quit without saving the configuration or changes
 W         - save changes
 

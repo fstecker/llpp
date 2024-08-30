@@ -45,3 +45,15 @@
 * TODO llpp -last and llpp select first entry in history behave differently
   586cb865549a22765a91ee0983e02a56429b1577
 * TODO llpp recode and comment "tile" handling
+* TODO changing interpagespace in setup breaks navigation
+- State "TODO"       from              [2023-02-17 Fri 05:39]
+* TODO scaled page indicator lines are drawn on top of scrollbar
+* TODO don't forget to credit sebras for outline location simplification
+- State "TODO"       from              [2023-02-22 Wed 02:54]
+* TODO fix interpagespace setting (was setting it to negated value)
+- State "TODO"       from              [2023-02-22 Wed 03:55]
+* TODO zoom in on something quit llpp, reopen... whoops
+- State "TODO"       from              [2023-02-22 Wed 03:59]
+* TODO zoom in in ecma376.pdf it will enter endless eviction loop
+- State "TODO"       from              [2023-02-22 Wed 04:00]
+* TODO x location is not restored when entering from history (-last works!)

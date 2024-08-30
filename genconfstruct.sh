@@ -2,6 +2,7 @@
 set -eu
 
 cat<<EOF
+let zs = ""
 type rgb = (float * float * float)
 and rgba = (float * float * float * float)
 and fitmodel = | FitWidth | FitProportional | FitPage
@@ -105,8 +106,8 @@ g beyecolumns "columncount option" None
 s selcmd "{|$clip|}"
 s pastecmd "{|$paste|}"
 s paxcmd '{|echo PAX "%s">&2|}'
-s passcmd Utils.E.s
-s savecmd Utils.E.s
+s passcmd zs
+s savecmd zs
 b updatecurs true
 K keyhashes '(string * keyhash) list' \
 '(let mk n = (n, Hashtbl.create 1) in
@@ -119,15 +120,15 @@ s stcmd "{|echo SyncTex|}"
 b riani false
 g paxmark mark MarkWord
 b leftscroll false
-s title Utils.E.s
+s title zs
 f lastvisit 0.0
 b annotinline true
 b coarseprespos false
-g css css Utils.E.s
+g css css zs
 b usedoccss true
-s key Utils.E.s
+s key zs
 P pax
-g dcf dcf Utils.E.s
+g dcf dcf zs
 s hcs "{|aoeuidhtns|}"
 i rlw 420
 i rlh 595

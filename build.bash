@@ -37,11 +37,8 @@ mudeps=('freetype2' 'gumbo' 'harfbuzz' 'libjpeg' 'libopenjp2' 'x11' 'zlib')
 
 mkdir -p $outd/{$wsid,lablGL}
 
-isfresh() {
-    test -f "$1.past" || return 1
-    test "$(<$1.past)" = "$2"
-} 2>/dev/null
-
+# thanks to Sebastian Rasmussen
+isfresh() { test "$(cat $1.past)" = "$2"; } 2>/dev/null
 
 mbt=${mbt:-release}
 test -n "${gmk:-}" && gmk=false || gmk=true
@@ -72,13 +69,18 @@ oincs() {
 }
 
 oflags() {
+    local f=""
     case "${1#$outd/}" in
         lablGL/*) f="-g";;
-        utf8syms.cmo|confstruct.cmo|config.cmo|ffi.cmo|wsi/cocoa/wsi.cmo)
+        utf8syms.cmo|confstruct.cmo)
             f="-g -strict-sequence -strict-formats -alert @all-missing-mli";;
+        wsi/x11/wsi.cm[io]) f="-g -I +unix";;
+        utils.cmi) f="-g -I +unix -I +str";;
+        config.cmo|ffi.cmo|main.cmo|utils.cmo|parser.cmo|uiutils.cmo|help.cmo)
+            f="-g -I +unix -I +str -strict-sequence -strict-formats -alert @all-missing-mli";;
         *) f="-g -strict-sequence -strict-formats -alert @all -warn-error @A";;
     esac
-    echo $(oincs $outd $1) -I +unix -I +str $f
+    echo $(oincs $outd $1) $f
 }
 
 cflags() {
@@ -288,7 +290,8 @@ else
     bocamlc wsi/x11/xlib.o
 fi
 
-cmd="ocamlc -custom $libs -o $outd/llpp $cobjs $modules -cclib \"$clibs\" -I +unix -I +str"
+cmd="ocamlc -custom $libs -o $outd/llpp $cobjs $modules -cclib \"$clibs\""
+cmd="$cmd -I +unix -I +str"
 keycmd="digest $outd/llpp $cobjs $modules $mulibs"
 isfresh "$outd/llpp" "$cmd$(eval $keycmd)" || {
     echo linking $outd/llpp
