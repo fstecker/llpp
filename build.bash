@@ -33,6 +33,7 @@ test -n "${1-}" || die "usage: $0 build-directory"
 outd=$1
 srcd=$(dirname $0)
 mudir=$outd/mupdf
+muinc="-I $mudir/include" # allow to provide a mupdf other than the system version
 mudeps=('freetype2' 'gumbo' 'harfbuzz' 'libjpeg' 'libopenjp2' 'x11' 'zlib')
 
 mkdir -p $outd/{$wsid,lablGL}
@@ -44,7 +45,8 @@ mbt=${mbt:-release}
 test -n "${gmk:-}" && gmk=false || gmk=true
 
 mulibs="$mudir/build/$mbt/libmupdf.a $mudir/build/$mbt/libmupdf-third.a"
-
+make="make -C "$mudir" build=$mbt -j $mjobs libs"
+$make -q -s || $make
 
 oincs() {
     local b=$1 incs
@@ -88,7 +90,7 @@ cflags() {
         version.o) f=-DLLPP_VERSION=$ver;;
         lablGL/*.o) f="-g -Wno-pointer-sign -Werror -O2";;
         link.o)
-            f="$CFLAGS -g -std=c11 $(pkg-config --cflags "${mudeps[@]}") -Wall -Wextra -pedantic "
+            f="$CFLAGS -g -std=c11 $muinc $(pkg-config --cflags "${mudeps[@]}") -Wall -Wextra -pedantic "
             test "${mbt-}" = "debug" || f+="-O2 "
             $darwin && f+="-DMACOS -D_GNU_SOURCE -DGL_H='<OpenGL/gl.h>'" \
                     || f+="-D_POSIX_C_SOURCE -DGL_H='<GL/gl.h>'"
@@ -277,7 +279,8 @@ for m in ml_gl ml_glarray ml_raw; do
 done
 
 libs="str.cma unix.cma"
-clibs="-ljbig2dec $(pkg-config --libs "${mudeps[@]}") -lmupdf -lpthread"
+clibs="-L$mudir/build/$mbt $(pkg-config --libs "${mudeps[@]}") -lmupdf -lmupdf-third -lpthread"
+#clibs="-ljbig2dec $(pkg-config --libs "${mudeps[@]}") -lmupdf -lpthread"
 if $darwin; then
     mcomp=$ccomp
     clibs+=" -framework Cocoa -framework OpenGL"

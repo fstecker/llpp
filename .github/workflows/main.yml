@@ -22,7 +22,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
        sudo apt-get update
-       sudo apt-get install libgl1-mesa-dev ccache
+       sudo apt-get install libgl1-mesa-dev ccache ocaml libfreetype-dev
     - name: build
       if: matrix.os == 'ubuntu-latest'
       run: bash ahbs
