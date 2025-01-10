@@ -3938,7 +3938,8 @@ let display () =
        Glutils.filledrect x0 y0 x1 y1;
     in
     Gl.enable `blend;
-    GlDraw.color (0.1, 0.1, 0.1) ~alpha:0.5;
+    let i, alpha = if conf.invert then (0.9, 0.2) else (0.1, 0.2) in
+    GlDraw.color (i, i, i) ~alpha;
     GlFunc.blend_func ~src:`src_alpha ~dst:`one_minus_src_alpha;
     (match !S.layout with
      | _ :: [] -> drawsep (conf.pgscale *. float !S.winh)
