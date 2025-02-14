@@ -110,8 +110,8 @@ mflags() {
 }
 
 overs=$(ocamlc -vnum 2>/dev/null) || overs=""
-if test "$overs" != "5.2.0"; then
-    url="https://caml.inria.fr/pub/distrib/ocaml-5.2/ocaml-5.2.0.tar.xz"
+if test "$overs" != "5.3.0"; then
+    url="https://caml.inria.fr/pub/distrib/ocaml-5.3/ocaml-5.3.0.tar.xz"
     txz=$outd/$(basename $url)
     keycmd="printf $url; digest $txz;"
     isfresh $txz "$(eval $keycmd)" || {
