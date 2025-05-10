@@ -85,7 +85,7 @@ static void clear_font_cache(void)
 #if PADDING > 0
         unsigned char *zero = calloc(g_cache_w, g_cache_h);
         if (!zero)
-                err(1, errno, "malloc zero (%u bytes failed)", g_cache_w * g_cache_h);
+                err(1, errno, "malloc zero (%d bytes failed)", g_cache_w * g_cache_h);
         glBindTexture(GL_TEXTURE_2D, g_cache_tex);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, g_cache_w, g_cache_h, GL_ALPHA, GL_UNSIGNED_BYTE, zero);
         free(zero);

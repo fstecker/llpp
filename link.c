@@ -28,6 +28,7 @@
 #pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
 #pragma GCC diagnostic ignored "-Wunsafe-buffer-usage"
+#pragma GCC diagnostic ignored "-Wpre-c11-compat"
 #else
 #pragma GCC diagnostic error "-Wcast-qual"
 #endif
@@ -835,7 +836,7 @@ static void initpdims (void)
             if (fwrite (state.pagedims, sizeof (*state.pagedims),
                         state.pagedimcount + 1, f)
                 - (state.pagedimcount + 1)) {
-                err (1, errno, "fwrite pagedim data %zu %u",
+                err (1, errno, "fwrite pagedim data %zu %d",
                      sizeof (*state.pagedims), state.pagedimcount+1);
             }
             fclose (f);
@@ -929,7 +930,7 @@ static void layout (void)
     }
 
     do {
-        printd ("pdim %u %d %d %d", p->pageno, p->left,
+        printd ("pdim %d %d %d %d", p->pageno, p->left,
                 abs (p->bounds.x0 - p->bounds.x1),
                 abs (p->bounds.y0 - p->bounds.y1));
     } while (p-- != state.pagedims);
@@ -1567,7 +1568,7 @@ static void *mainloop (void UNUSED_ATTR *unused)
             b = now ();
             unlock ("tile");
 
-            printd ("tile %d %d %" PRIxPTR " %u %f",
+            printd ("tile %d %d %" PRIxPTR " %d %f",
                     x, y, (uintptr_t) tile,
                     tile->w * tile->h * tile->pixmap->n, b - a);
             break;
