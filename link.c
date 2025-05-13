@@ -592,6 +592,7 @@ static void initpdims1 (void)
     fz_var (shown);
     fz_var (pageno);
     fz_var (cxcount);
+    fz_var (rootmediabox);
 
     cxcount = state.pagecount;
     if ((pdf = pdf_specifics (ctx, state.doc))) {
