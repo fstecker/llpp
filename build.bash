@@ -77,6 +77,7 @@ oflags() {
         lablGL/*) f="-g";;
         utf8syms.cmo|confstruct.cmo)
             f="-g -strict-sequence -strict-formats -alert @all-missing-mli";;
+        wsi/cocoa/wsi.cm[io]) f="-g -I +unix";;
         wsi/x11/wsi.cm[io]) f="-g -I +unix";;
         utils.cmi) f="-g -I +unix -I +str";;
         config.cmo|ffi.cmo|main.cmo|utils.cmo|parser.cmo|uiutils.cmo|help.cmo)
