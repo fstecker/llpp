@@ -41,7 +41,9 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 #pragma GCC diagnostic ignored "-Wundef"
+#ifdef __clang__
 #pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
+#endif
 #include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 #pragma GCC diagnostic pop
@@ -49,7 +51,9 @@
 #pragma GCC diagnostic push
 #ifdef __clang__
 #pragma GCC diagnostic ignored "-Wreserved-id-macro"
+#ifdef __clang__
 #pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
+#endif
 #pragma GCC diagnostic ignored "-Wdocumentation"
 #endif
 #include <ft2build.h>
@@ -1762,7 +1766,9 @@ done:
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
+#ifdef __clang__
 #pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
+#endif
 #include "glfont.c"
 #pragma GCC diagnostic pop
 
