@@ -25,7 +25,6 @@
 #pragma GCC diagnostic ignored "-Wdouble-promotion"
 #pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
-#pragma GCC diagnostic ignored "-Wunsafe-buffer-usage"
 #pragma GCC diagnostic ignored "-Wpre-c11-compat"
 #else
 #pragma GCC diagnostic error "-Wcast-qual"
@@ -33,12 +32,15 @@
 
 #include GL_H
 
+#pragma GCC diagnostic push
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wunsafe-buffer-usage"
+#endif
 #include <caml/fail.h>
 #include <caml/alloc.h>
 #include <caml/memory.h>
 #include <caml/unixsupport.h>
 
-#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 #pragma GCC diagnostic ignored "-Wundef"
 #ifdef __clang__
