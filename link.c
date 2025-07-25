@@ -26,6 +26,7 @@
 #pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
 #pragma GCC diagnostic ignored "-Wpre-c11-compat"
+#pragma GCC diagnostic ignored "-Wunsafe-buffer-usage"
 #else
 #pragma GCC diagnostic error "-Wcast-qual"
 #endif
